@@ -1,0 +1,13 @@
+# PlatformIO build artifacts and dependencies
+.pio/
+
+# IDE/editor caches
+.vs/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.user
+*.suo
