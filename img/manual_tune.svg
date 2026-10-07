@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" width="512" height="384" font-family="monospace">
+<rect width="128" height="64" fill="#000"/>
+<rect x="0.4" y="0.4" width="127.2" height="63.2" fill="none" stroke="#333" stroke-width="0.8"/>
+<text x="0" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">AM </text>
+<text x="45" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">3.0K</text>
+<text x="108" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">25</text>
+<text x="12" y="45" font-size="21" font-weight="bold" fill="#fff" xml:space="preserve">7200</text>
+<text x="0" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">SW6 </text>
+<rect x="38" y="48" width="32" height="16" fill="#fff"/>
+<text x="38" y="60.5" font-size="13" font-weight="bold" fill="#000" xml:space="preserve">[9K]</text>
+<text x="102" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">85%</text>
+<line x1="2" y1="78" x2="38" y2="62" stroke="#888" stroke-width="0.6"/>
+<text x="2" y="92" font-size="9" font-weight="normal" fill="#888" xml:space="preserve">step under edit: rotate to change, press to confirm</text>
+</svg>

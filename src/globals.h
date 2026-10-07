@@ -1,10 +1,15 @@
 #pragma once
 
+#include "defs.h"
+#include "types.h"
+#include <SI4735.h>
+#include "Rotary.h"
+#include "SimpleButton.h"
+
 long g_storeTime = millis();
 
 bool g_voltagePinConnnected = false;
 bool g_ssbLoaded = false;
-bool g_fmStereo = true;
 
 bool g_cmdVolume = false;
 bool g_cmdStep = false;
@@ -21,6 +26,13 @@ uint32_t g_lastAdjustmentTime = 0;
 uint8_t g_muteVolume = 0;
 int g_currentBFO = 0;
 
+//Direct frequency entry via rotary encoder (Delta 4)
+bool g_freqEntryActive = false;
+uint8_t g_freqEntryDigits[6];
+uint8_t g_freqEntryPos = 0;     //Current digit position
+uint8_t g_freqEntryCount = 0;   //Total digit positions for the band
+uint32_t g_freqEntryLastInput = 0;
+
 // Encoder buttons
 SimpleButton  btn_Bandwidth(BANDWIDTH_BUTTON);
 SimpleButton  btn_BandUp(BAND_BUTTON);
@@ -32,27 +44,12 @@ SimpleButton  btn_AGC(AGC_BUTTON);
 SimpleButton  btn_Step(STEP_BUTTON);
 SimpleButton  btn_Mode(MODE_SWITCH);
 
-volatile int g_encoderCount = 0;
+//int8_t is atomic on AVR, which keeps main/ISR accesses tear-free
+volatile int8_t g_encoderCount = 0;
 
 //Frequency tracking
 uint16_t g_currentFrequency;
 uint16_t g_previousFrequency;
-
-enum SettingType
-{
-    ZeroAuto,
-    Num,
-    Switch,
-    SwitchAuto
-};
-
-struct SettingsItem
-{
-    char name[5];
-    int8_t param;
-    uint8_t type;
-    void (*manipulateCallback)(int8_t);
-};
 
 void doAttenuation(int8_t v);
 void doSoftMute(int8_t v);
@@ -69,8 +66,6 @@ void doCPUSpeed(int8_t v = 0);
 void doRDSErrorLevel(int8_t v);
 #endif
 void doBFOCalibration(int8_t v);
-void doUnitsSwitch(int8_t v = 0);
-void doScanSwitch(int8_t v = 0);
 void doCWSwitch(int8_t v = 0);
 
 SettingsItem g_Settings[] =
@@ -79,11 +74,11 @@ SettingsItem g_Settings[] =
     { "ATT", 0,  SettingType::ZeroAuto,     doAttenuation     },  //Attenuation
     { "SM ", 0,  SettingType::Num,          doSoftMute        },  //Soft Mute
     { "SVC", 1,  SettingType::Switch,       doSSBAVC          },  //SSB AVC Switch
-    { "Syn", 0,  SettingType::Switch,       doSync            },  //SSB Sync
-    { "DeE", 1,  SettingType::Switch,       doDeEmp           },  //FM DeEmphasis (0 - 50, 1 - 75)
+    { "SYN", 0,  SettingType::Switch,       doSync            },  //SSB Sync
+    { "DEE", 1,  SettingType::Switch,       doDeEmp           },  //FM DeEmphasis (0 - 50, 1 - 75)
     { "AVC", 46, SettingType::Num,          doAvc             },  //Automatic Volume Control
     //Page 2
-    { "Scr", 80, SettingType::Num,          doBrightness      },  //Screen Brightness
+    { "SCR", 80, SettingType::Num,          doBrightness      },  //Screen Brightness
     { "SW ", 0,  SettingType::Switch,       doSWUnits         },  //SW Units
     { "SSM", 1,  SettingType::Switch,       doSSBSoftMuteMode },  //SSB Soft Mute Mode
     { "COF", 0,  SettingType::SwitchAuto,   doCutoffFilter    },  //SSB Cutoff Filter
@@ -93,55 +88,24 @@ SettingsItem g_Settings[] =
 #endif
     //Page 3
     { "BFO", 0,  SettingType::Num,          doBFOCalibration  },  //BFO Offset calibration
-    { "Uni", 1,  SettingType::Switch,       doUnitsSwitch     },  //Show/Hide frequency units
-    { "Sca", 1,  SettingType::Switch,       doScanSwitch      },  //AM Encoder scan switch
+    { "UNI", 1,  SettingType::Switch,       doSWUnits         },  //Show/Hide frequency units
+    { "SCA", 1,  SettingType::Switch,       doSWUnits         },  //AM Encoder scan switch
     { "CW ", 0,  SettingType::Switch,       doCWSwitch        },  //CW is LSB or USB
 };
 
-enum SettingsIndex
-{
-    ATT,
-    SoftMute,
-    SVC,
-    Sync,
-    DeEmp,
-    AutoVolControl,
-    Brightness,
-    SWUnits,
-    SSM,
-    CutoffFilter,
-    CPUSpeed,
-#if USE_RDS
-    RDSError,
-#endif
-    BFO,
-    UnitsSwitch,
-    ScanSwitch,
-    CWSwitch,
-    SETTINGS_MAX
-};
-
-const uint8_t g_SettingsMaxPages = 3;
 int8_t g_SettingSelected = 0;
-int8_t g_SettingsPage = 1;
+int8_t g_SettingsTop = 0;   //First item of the 3-row scrolling viewport
 bool g_SettingEditing = false;
-
-//For managing BW
-struct Bandwidth
-{
-    uint8_t idx;      //Internal SI473X index
-    const char* desc;
-};
 
 int8_t g_bwIndexSSB = 4;
 Bandwidth g_bandwidthSSB[] =
 {
-    { 4, "0.5k" },
-    { 5, "1.0k" },
-    { 0, "1.2k" },
-    { 1, "2.2k" },
-    { 2, "3.0k" },
-    { 3, "4.0k" }
+    { 4, "0.5K" },
+    { 5, "1.0K" },
+    { 0, "1.2K" },
+    { 1, "2.2K" },
+    { 2, "3.0K" },
+    { 3, "4.0K" }
 };
 const uint8_t g_bwSSBMaxIdx = 5;
 
@@ -149,23 +113,23 @@ int8_t g_bwIndexAM = 4;
 const uint8_t g_maxFilterAM = 6;
 Bandwidth g_bandwidthAM[] =
 {
-    { 4, "1.0k" }, // 0
-    { 5, "1.8k" }, // 1
-    { 3, "2.0k" }, // 2
-    { 6, "2.5k" }, // 3
-    { 2, "3.0k" }, // 4 - Default
-    { 1, "4.0k" }, // 5
-    { 0, "6.0k" }  // 6
+    { 4, "1.0K" }, // 0
+    { 5, "1.8K" }, // 1
+    { 3, "2.0K" }, // 2
+    { 6, "2.5K" }, // 3
+    { 2, "3.0K" }, // 4 - Default
+    { 1, "4.0K" }, // 5
+    { 0, "6.0K" }  // 6
 };
 
 int8_t g_bwIndexFM = 0;
-char* g_bandwidthFM[] =
+const char* g_bandwidthFM[] =
 {
     "AUTO",
-    "110k",
-    " 84k",
-    " 60k",
-    " 40k"
+    "110K",
+    " 84K",
+    " 60K",
+    " 40K"
 };
 
 int g_tabStep[] =
@@ -200,31 +164,7 @@ int8_t g_tabStepFM[] =
 int8_t g_FMStepIndex = 1;
 const int8_t g_lastStepFM = (sizeof(g_tabStepFM) / sizeof(int8_t)) - 1;
 
-//Band table structures
-enum BandType : uint8_t
-{
-    LW_BAND_TYPE,
-    MW_BAND_TYPE,
-    SW_BAND_TYPE,
-    FM_BAND_TYPE
-};
-
-struct Band
-{
-    uint16_t minimumFreq;
-    uint16_t maximumFreq;
-    uint16_t currentFreq;
-    int8_t currentStepIdx;
-    int8_t bandwidthIdx;     // Bandwidth table index (internal table in Si473x controller)
-};
-
 #if USE_RDS
-enum RDSActiveInfo : uint8_t
-{
-    StationName,
-    StationInfo,
-    ProgramInfo
-};
 uint8_t g_rdsActiveInfo = RDSActiveInfo::StationName;
 char g_rdsPrevLen = 0;
 char* g_RDSCells[3];
@@ -232,12 +172,15 @@ char* g_RDSCells[3];
 
 char _literal_EmptyLine[17] = "                ";
 
-char* bandTags[] =
+//All tags padded to 3 chars: shorter tags leave residue when a longer
+//one was drawn before (e.g. the stale "R" when browsing AIR -> FM)
+const char* bandTags[] =
 {
-    "LW",
-    "MW",
-    "SW",
-    "  ",    //It looks better
+    "LW  ",
+    "MW  ",
+    "SW  ",
+    "AIR ",
+    "BCST",
 };
 
 Band g_bandList[] =
@@ -245,6 +188,7 @@ Band g_bandList[] =
     /* LW */ { LW_LIMIT_LOW, 520, 300, 0, 4 },
     /* MW */ { 520, 1710, 1476, 3, 4 },
     /* SW */ { SW_LIMIT_LOW, SW_LIMIT_HIGH, SW_LIMIT_LOW, 0, 4 },
+    /* AIR */ { AIR_LIMIT_LOW, AIR_LIMIT_HIGH, AIR_DEFAULT_FREQ, 0, 6 },
     /* FM */ { 6400, 10800, 8400, 1, 0 },
 };
 
@@ -252,17 +196,17 @@ uint16_t SWSubBands[] =
 {
     SW_LIMIT_LOW,  // 160 Meter
     3500, // 80 Meter
-    4500, 
+    4500,
     5600,
     6800, // 40 Meter
     7200, // 41 Meter
-    8500, 
+    8500,
     10000, // 30 Meter
     11200,
-    13400, 
+    13400,
     14000, // 20 Meter
     15000,
-    17200, 
+    17200,
     18000, // 17 Meter
     21000, // 15 Meter
     21400, // 13 Meter
@@ -274,18 +218,13 @@ const uint8_t g_SWSubBandCount = sizeof(SWSubBands) / sizeof(uint16_t);
 const uint8_t g_lastBand = (sizeof(g_bandList) / sizeof(Band)) - 1;
 int8_t g_bandIndex = 1;
 
-// Modulation
-enum Modulations : uint8_t
-{
-    AM,
-    LSB,
-    USB,
-    CW,
-    FM
-};
+//Deferred band selection (plan.md Delta 8): numbered SW sub-band browsing
+uint8_t g_bandSelSub = 0;     //Selected SW sub-band (0-based into SWSubBands)
+bool g_bandBrowsing = false;  //True while the band command is active
+
 volatile uint8_t g_currentMode = FM;
-const char* g_bandModeDesc[] = 
-{ 
+const char* g_bandModeDesc[] =
+{
     "AM ",
     "LSB",
     "USB",
@@ -302,3 +241,14 @@ uint8_t g_volume = DEFAULT_VOLUME;
 
 Rotary g_encoder = Rotary(ENCODER_PIN_A, ENCODER_PIN_B);
 SI4735 g_si4735;
+
+//Single definition of the mode availability matrix (defs.h declares it extern
+//so module TUs can use modeAvailable()).
+const bool g_bandAvailableModes[][5] PROGMEM =
+{
+    { true,  true,  true,  true,  false },  // LW  - AM, LSB, USB, CW
+    { true,  true,  true,  true,  false },  // MW  - AM, LSB, USB, CW
+    { true,  true,  true,  true,  false },  // SW  - AM, LSB, USB, CW
+    { true,  false, false, false, false },  // AIR - AM only (harmonic tuning)
+    { false, false, false, false, true  },  // FM  - FM only
+};

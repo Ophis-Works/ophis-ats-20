@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 64" width="512" height="256" font-family="monospace">
+<rect width="128" height="64" fill="#000"/>
+<rect x="0.4" y="0.4" width="127.2" height="63.2" fill="none" stroke="#333" stroke-width="0.8"/>
+<text x="0" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">USB</text>
+<text x="45" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">2.2K</text>
+<text x="108" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">31</text>
+<text x="24" y="45" font-size="21" font-weight="bold" fill="#fff" xml:space="preserve">14070.00</text>
+<text x="0" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">SW11</text>
+<text x="32" y="60.5" font-size="13" font-weight="normal" fill="#fff" xml:space="preserve"># # # # # # # # # # # #</text>
+</svg>

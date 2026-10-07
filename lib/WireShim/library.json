@@ -1,0 +1,8 @@
+{
+    "name": "WireShim",
+    "version": "1.0.0",
+    "description": "Minimal blocking TWI master with an Arduino Wire-compatible API for AVR. Drop-in flash/RAM replacement for the stock Wire library.",
+    "license": "MIT",
+    "frameworks": "arduino",
+    "platforms": "atmelavr"
+}

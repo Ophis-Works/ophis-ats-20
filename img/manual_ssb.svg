@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 96" width="512" height="384" font-family="monospace">
+<rect width="128" height="64" fill="#000"/>
+<rect x="0.4" y="0.4" width="127.2" height="63.2" fill="none" stroke="#333" stroke-width="0.8"/>
+<text x="0" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">LSB</text>
+<rect x="36" y="0" width="8" height="16" fill="#fff"/>
+<text x="36" y="12.5" font-size="13" font-weight="bold" fill="#000" xml:space="preserve">S</text>
+<text x="45" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">2.2K</text>
+<text x="108" y="12.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">31</text>
+<text x="24" y="45" font-size="21" font-weight="bold" fill="#fff" xml:space="preserve">14070.25</text>
+<text x="0" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">SW11</text>
+<text x="32" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">[500]</text>
+<text x="102" y="60.5" font-size="13" font-weight="bold" fill="#fff" xml:space="preserve">85%</text>
+<line x1="40" y1="78" x2="88" y2="62" stroke="#888" stroke-width="0.6"/>
+<text x="40" y="92" font-size="9" font-weight="normal" fill="#888" xml:space="preserve">decimal part = fine BFO position (tune it with 10-500 Hz steps)</text>
+</svg>
